@@ -1,12 +1,13 @@
 {
   "name": "research-pool-lab",
   "version": "1.0.0",
-  "main": "server_v1_baseline.js",
+  "main": "server_v3_monitor.js",
   "type": "module",
   "scripts": {
-    "start": "node server_v2_stress.js", 
+    "start": "node server_v3_monitor.js",
     "phase1": "node server_v1_baseline.js",
-    "phase2": "node server_v2_stress.js"
+    "phase2": "node server_v2_stress.js",
+    "phase3": "node server_v3_monitor.js"
   },
   "dependencies": {
     "express": "^4.18.2",
