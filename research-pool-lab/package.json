@@ -4,7 +4,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server_v1_baseline.js"
   },
   "dependencies": {
     "express": "^4.18.2",
