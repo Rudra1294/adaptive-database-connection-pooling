@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # 1. Your Node.js App
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'   # Keeping the CPU limit for the stress test
+          memory: 512M
+
+  # 2. The MongoDB Database
+  db:
+    image: mongo:6.0
+    restart: always
+    ports:
+      - "27017:27017"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
