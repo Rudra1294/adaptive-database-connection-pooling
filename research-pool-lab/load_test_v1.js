@@ -8,7 +8,7 @@ export const options = {
   // We want to simulate a "Ramp Up" of traffic
   stages: [
     { duration: '10s', target: 10 },  // Warm up to 10 users
-    { duration: '30s', target: 50 },  // Stay at 50 users (High Load)
+    { duration: '30s', target: 100 },  // Stay at 100 users (High Load)
     { duration: '10s', target: 0 },   // Cool down
   ],
   // Thresholds: Fail the test if P95 latency is too high
