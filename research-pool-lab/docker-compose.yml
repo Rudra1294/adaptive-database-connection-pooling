@@ -11,8 +11,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'   # Keeping the CPU limit for the stress test
-          memory: 512M
+          cpus: '3'   # Keeping the CPU limit for the stress test
+          memory: 4G
 
   # 2. The MongoDB Database
   db:
@@ -23,4 +23,4 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: '3.0'

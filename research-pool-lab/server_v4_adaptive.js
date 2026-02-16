@@ -13,12 +13,12 @@ const LOG_FILE = 'results_adaptive_dynamic.csv';
 // 1. CONFIGURATION
 // ---------------------------------------------------------
 let VIRTUAL_POOL_LIMIT = 20; 
-const MIN_LIMIT = 1;
+const MIN_LIMIT = 5; // Minimum pool size to avoid overloading the system
 const MAX_LIMIT = 50; // Kept at 50 for safety
 
 // TUNING
 const CHECK_INTERVAL = 50; 
-const TARGET_LAG = 25; // We want to stay near 30ms (20ms baseline + 10ms buffer)
+const TARGET_LAG = 25; // We want to stay near 30ms (20ms baseline + 5ms buffer)
 const HISTORY_SIZE = 5;
 let lagHistory = [];
 
