@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 // ---------------------------------------------------------
-// CONFIGURATION (The "Attack Plan") for reactive pooling
+// CONFIGURATION (The "Attack Plan") 
 // ---------------------------------------------------------
 export const options = {
   scenarios: {
@@ -25,22 +25,6 @@ export const options = {
     http_req_duration: ['p(95)<2000'], // 95% of requests should be faster than 2s
   },
 };
-
-// // ---------------------------------------------------------
-// // CONFIGURATION (The "Attack Plan") for hybrid pooling
-// // ---------------------------------------------------------
-// export const options = {
-//   // We want to simulate a "Ramp Up" of traffic
-//   stages: [
-//     { duration: '30s', target: 50 },  // Phase 1: 50 Users (Should handle easily)
-//     { duration: '30s', target: 200 }, // Phase 2: 200 Users (Queue should fill)
-//     { duration: '30s', target: 500 }, // Phase 3: 500 Users (Stress Test)
-//   ],
-//   // Thresholds: Fail the test if P95 latency is too high
-//   thresholds: {
-//     http_req_duration: ['p(95)<2000'], // 95% of requests should be faster than 2s
-//   },
-// };
 
 // ---------------------------------------------------------
 // THE USER BEHAVIOR (The Loop)

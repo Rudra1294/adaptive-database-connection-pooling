@@ -1,15 +1,16 @@
 {
   "name": "research-pool-lab",
   "version": "1.0.0",
-  "main": "server_v3_monitor.js",
+  "main": "server_v4_adaptive.js",
   "type": "module",
   "scripts": {
-    "start": "node server_v3_monitor.js",
+    "start": "node server_v4_adaptive.js",
     "phase1": "node server_v1_baseline.js",
     "phase2": "node server_v2_stress.js",
     "phase3": "node server_v3_monitor.js",
     "phase4": "node server_v4_adaptive.js",
-    "phase5": "node server_hybrid.js"
+    "phase5": "node server_hybrid.js",
+    "phase6": "node server_hybrid_fifo.js"
   },
   "dependencies": {
     "express": "^4.18.2",

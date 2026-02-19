@@ -7,7 +7,8 @@ import { monitorEventLoopDelay } from 'perf_hooks';
 const app = express();
 const port = 3000;
 const MONGO_URI = 'mongodb://db:27017/research_db';
-const LOG_FILE = 'results_ultimate.csv';
+// Changed log file name for your baseline tests
+const LOG_FILE = 'results_fifo_baseline.csv'; 
 
 // ---------------------------------------------------------
 // 1. CONFIGURATION
@@ -21,11 +22,7 @@ const CHECK_INTERVAL = 50;
 const IDEAL_LATENCY = 30; 
 const MAX_REQUEST_AGE = 5000;
 
-// FIX 2: Aggressive Aging Math
-// Blockers start at 1, Mosquitoes at 3.
-// With a rate of 1.0, a Blocker reaches Priority 3 in just 2 seconds.
-// This gives it 3 full VIP seconds at the front of the line before the 5s timeout hits!
-const AGING_RATE_PER_SEC = 1.0; 
+// (Priority and Aging variables have been removed)
 
 let queueOverflowCount = 0; 
 let processedCount = 0; 
@@ -36,7 +33,7 @@ const requestQueue = [];
 let activeRequests = 0;
 
 // ---------------------------------------------------------
-// FIX 1: BUFFERED LOGGING (The Lag Killer)
+// 2. BUFFERED LOGGING
 // ---------------------------------------------------------
 const logStream = fs.createWriteStream(LOG_FILE, { flags: 'a' });
 if (!fs.existsSync(LOG_FILE) || fs.statSync(LOG_FILE).size === 0) {
@@ -44,7 +41,6 @@ if (!fs.existsSync(LOG_FILE) || fs.statSync(LOG_FILE).size === 0) {
 }
 
 let logBuffer = [];
-// Flush memory to disk only once per second, saving massive CPU overhead
 setInterval(() => {
     if (logBuffer.length > 0) {
         logStream.write(logBuffer.join(''));
@@ -58,38 +54,19 @@ let lastCheckTime = Date.now();
 
 
 // ---------------------------------------------------------
-// FIX 3 (Part A): CENTRALIZED SMART SORTING
-// ---------------------------------------------------------
-function sortRequestQueue(now) {
-    if (requestQueue.length <= 1) return; // No need to sort 0 or 1 items
-    
-    requestQueue.sort((a, b) => {
-        const ageA = (now - a.timestamp) / 1000;
-        const ageB = (now - b.timestamp) / 1000;
-        
-        const effA = a.priority + (ageA * AGING_RATE_PER_SEC);
-        const effB = b.priority + (ageB * AGING_RATE_PER_SEC);
-        
-        return effB - effA; // Highest effective priority goes to index 0
-    });
-}
-
-
-// ---------------------------------------------------------
-// 2. DISPATCHER (The Bouncer)
+// 3. DISPATCHER (Strict FIFO Bouncer)
 // ---------------------------------------------------------
 function tryDispatch() {
     const now = Date.now();
 
     while (requestQueue.length > 0 && activeRequests < VIRTUAL_POOL_LIMIT) {
-        const candidate = requestQueue[0];
+        const candidate = requestQueue[0]; // Always look at the absolute oldest request
 
         // CHECK A: Is it too old?
         if (now - candidate.timestamp > MAX_REQUEST_AGE) {
             requestQueue.shift(); 
             
-            // FIX 4: Defensive Networking
-            // Only send 503 if the user is still connected and we haven't already sent headers
+            // Defensive Networking
             if (!candidate.res.headersSent && !candidate.req.destroyed && !candidate.isAborted) {
                 candidate.res.status(503).json({ error: 'Request Timeout' });
             }
@@ -103,7 +80,7 @@ function tryDispatch() {
             continue; 
         }
 
-        // It passed the checks! Let it in.
+        // It passed the checks! Let it in. (Strict FIFO: First in, First out)
         const nextRequest = requestQueue.shift();
         activeRequests++;
         nextRequest.handler(nextRequest.req, nextRequest.res);
@@ -111,7 +88,7 @@ function tryDispatch() {
 }
 
 // ---------------------------------------------------------
-// 3. THE BRAIN
+// 4. THE BRAIN
 // ---------------------------------------------------------
 function startServer() {
   setInterval(() => {
@@ -127,8 +104,7 @@ function startServer() {
     const throughput = processedCount;
     processedCount = 0; 
 
-    // Update queue order so waiting Blockers move forward
-    sortRequestQueue(now);
+    // (The Smart Sort function was removed from here)
 
     let mode = "STABLE";
     const queueSize = requestQueue.length;
@@ -159,7 +135,6 @@ function startServer() {
 
     tryDispatch();
 
-    // Push to Memory Buffer instead of Disk
     const time = new Date().toISOString();
     logBuffer.push(`${time},${activeRequests},${queueSize},${realLag.toFixed(2)},${VIRTUAL_POOL_LIMIT},${mode},${throughput},${zombiePrunedCount}\n`);
     
@@ -167,16 +142,15 @@ function startServer() {
     histogram.reset();
   }, CHECK_INTERVAL);
 
-  app.listen(port, () => { console.log(`🚀 Ultimate Server running on port ${port}`); });
+  app.listen(port, () => { console.log(`🚀 FIFO Baseline Server running on port ${port}`); });
 }
 
 // ---------------------------------------------------------
-// 4. MIDDLEWARE
+// 5. MIDDLEWARE
 // ---------------------------------------------------------
 app.use((req, res, next) => {
   if (requestQueue.length >= MAX_QUEUE_SIZE) {
       queueOverflowCount++;
-      // Defensive networking on instant fail
       if (!res.headersSent) {
           return res.status(503).json({ error: 'System Overload' });
       }
@@ -185,15 +159,12 @@ app.use((req, res, next) => {
 
   lastQueueActivityTime = Date.now();
 
-  let priority = 1;
-  if (req.path === '/fast') priority = 3;       
-  else if (req.path === '/heavy-cpu') priority = 2; 
+  // (Priority tagging was removed from here)
 
   const queueItem = {
       req,
       res,
-      priority,
-      timestamp: Date.now(),
+      timestamp: Date.now(), // Only timestamp matters now for FIFO
       isAborted: false, 
       handler: (qReq, qRes) => {
           qRes.on('finish', () => { 
@@ -207,11 +178,10 @@ app.use((req, res, next) => {
 
   req.on('close', () => { queueItem.isAborted = true; });
 
+  // Simply push to the back of the line
   requestQueue.push(queueItem);
   
-  // FIX 3 (Part B): Instant Triage. 
-  // Sort the queue the exact millisecond someone arrives so VIPs aren't delayed.
-  sortRequestQueue(Date.now());
+  // Try to dispatch immediately without sorting
   tryDispatch();
 });
 
