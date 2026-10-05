@@ -97,11 +97,18 @@ try {
         const columns = line.split(',');
         if (columns.length < 5) return; // Skip malformed lines
         
-        // CSV Format: Timestamp, ActiveRequests, Lag_ms, VirtualLimit, Status, Kp_Used
-        const activeReq = parseInt(columns[1]);
-        const lag = parseFloat(columns[2]);
-        const virtualLimit = parseInt(columns[3]);
-        const status = columns[4];
+        // // CSV Format: Timestamp, ActiveRequests, Lag_ms, VirtualLimit, Status, Kp_Used
+        // const activeReq = parseInt(columns[1]);
+        // const lag = parseFloat(columns[2]);
+        // const virtualLimit = parseInt(columns[3]);
+        // const status = columns[4];
+        
+        // Update the column indices to match your CSV format
+        const activeReq = parseInt(columns[1]); // Active
+        const queueSize = parseInt(columns[2]); // QueueSize
+        const lag = parseFloat(columns[3]);     // Real_Lag (This was likely wrong)
+        const virtualLimit = parseInt(columns[4]); // Limit
+        const status = columns[5];              // Mode
 
         if (!isNaN(lag)) {
             // Track the lowest the pool ever dropped

@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8'
 
 services:
   # 1. Your Node.js App
@@ -23,4 +23,53 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '8.0'  # Limiting MongoDB to 1 CPU for the stress test
+          cpus: '1.0'  # Limiting MongoDB to 1 CPU for the stress test
+
+
+# Use this for LLM version
+# version: '3.8'
+
+# services:
+#   # 1. Your Node.js App
+#   app:
+#     build: .
+#     container_name: research_app
+#     ports:
+#       - "0.0.0.0:3000:3000"
+#     depends_on:
+#       - db
+#       - redis
+#     extra_hosts:
+#       - "host.docker.internal:host-gateway"
+#     deploy:
+#       resources:
+#         limits:
+#           cpus: '0.50'
+#           memory: 512M
+#     volumes:
+#       - .:/usr/src/app
+
+#   # 2. The MongoDB Database
+#   db:
+#     image: mongo:6.0
+#     container_name: research_db
+#     restart: always
+#     ports:
+#       - "27017:27017"
+#     deploy:
+#       resources:
+#         limits:
+#           cpus: '1.0'
+#           memory: 2G
+
+#   # 3. Redis Cache
+#   redis:
+#     image: redis:latest
+#     container_name: research_redis
+#     ports:
+#       - "6379:6379"
+#     deploy:
+#       resources:
+#         limits:
+#           cpus: '0.50'
+#           memory: 512M
